@@ -22,7 +22,7 @@ if [regexp {\.tcl$} $arg0] {
 }
 
 # Setting of these switches is done in the global config
-# file (/etc/usb_modeswitch.conf) if available
+# file (/usr/local/etc/usb_modeswitch.conf) if available
 
 set flags(logging) 1
 set flags(noswitching) 0
@@ -118,15 +118,15 @@ if {![regexp -- {--switch-} [lindex $argv 0]]} {
 	SafeExit
 }
 
-set setup(dbdir) /usr/share/usb_modeswitch
-set setup(dbdir_etc) /etc/usb_modeswitch.d
+set setup(dbdir) /usr/local/share/usb_modeswitch
+set setup(dbdir_etc) /usr/local/etc/usb_modeswitch.d
 
 
 if {![file exists $setup(dbdir)] && ![file exists $setup(dbdir_etc)]} {
-	Log "\nError: no config database found in /usr/share or /etc. Exit"
+	Log "\nError: no config database found in /usr/local/share or /usr/local/etc. Exit"
 	SafeExit
 }
-set bindir /usr/sbin
+set bindir /usr/local/sbin
 
 set devList1 {}
 set devList2 {}
@@ -306,7 +306,7 @@ foreach mconfig $configList {
 			if [CheckMBIM] {
 				Log " driver for MBIM devices is available"
 				Log "Find MBIM configuration number ..."
-				if [catch {set cfgno [exec /usr/sbin/usb_modeswitch -j -Q $busParam $devParam -v $usb(idVendor) -p $usb(idProduct)]} err] {
+				if [catch {set cfgno [exec /usr/local/sbin/usb_modeswitch -j -Q $busParam $devParam -v $usb(idVendor) -p $usb(idProduct)]} err] {
 					Log "Error when trying to find MBIM configuration, switch to legacy modem mode"
 				} else {
 					set cfgno [string trim $cfgno]
@@ -331,7 +331,7 @@ foreach mconfig $configList {
 		# Now we are actually switching
 		if $flags(logging) {
 			Log "Command to be run:\nusb_modeswitch -W -D $configParam $busParam $devParam -v $usb(idVendor) -p $usb(idProduct) -f \$flags(config)"
-			set report [exec /usr/sbin/usb_modeswitch -W -D $configParam $busParam $devParam -v $usb(idVendor) -p $usb(idProduct) -f "$flags(config)" 2>@1]
+			set report [exec /usr/local/sbin/usb_modeswitch -W -D $configParam $busParam $devParam -v $usb(idVendor) -p $usb(idProduct) -f "$flags(config)" 2>@1]
 			Log "\nVerbose debug output of usb_modeswitch and libusb follows"
 			Log "(Note that some USB errors are to be expected in the process)"
 			Log "--------------------------------"
@@ -339,7 +339,7 @@ foreach mconfig $configList {
 			Log "--------------------------------"
 			Log "(end of usb_modeswitch output)\n"
 		} else {
-			set report [exec /usr/sbin/usb_modeswitch -Q -D $configParam $busParam $devParam -v $usb(idVendor) -p $usb(idProduct) -f "$flags(config)" 2>@1]
+			set report [exec /usr/local/sbin/usb_modeswitch -Q -D $configParam $busParam $devParam -v $usb(idVendor) -p $usb(idProduct) -f "$flags(config)" 2>@1]
 		}
 		break
 	} else {
