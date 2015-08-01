@@ -48,6 +48,51 @@ Log "[ParseGlobalConfig]"
 # This is run once for every port of LISTED devices by
 # a udev rule
 
+# FreeBSD: Evaluate parameters given by devd(8) rules
+# FIXME:
+# - Better input validation
+# - Check for missing and likely optional arguments
+# - Doesn't validate if argument is given more than once
+
+for {set i 0} {$i < $argc} {incr i} {
+
+	if {[lindex $argv $i] == "--cdev"} {
+		set cdev [split [lindex $argv $i+1] _]
+
+		if { ! [ IsValidType cdev $cdev ] } { SafeExit }
+
+		# Find the separating "." in ugen<bus>.<device>
+		for {set dot 0} {$dot < [string length $cdev] } {incr dot} {
+		        if { [string index $cdev $dot] == "." } { break }
+		}
+
+		# bus = starting "ugen" till "."
+		# device = Starting "." till end
+		set bus    [ string range $cdev 4 $dot-1 ]
+		set device [ string range $cdev $dot+1 [ string length $cdev ]-1 ]
+	}
+
+	if {[lindex $argv $i] == "--class"} {
+		set class [split [lindex $argv $i+1] _]
+		if { ! [ IsValidType hex $class ] } { SafeExit }
+	}
+
+	if {[lindex $argv $i] == "--help"} {
+		puts "FIXME, not yet a helpful message"
+		SafeExit
+	}
+
+	if {[lindex $argv $i] == "--product" } {
+		set product [split [lindex $argv $i+1] _]
+		if { ! [ IsValidType hex $product ] } { SafeExit }
+	}
+
+	if {[lindex $argv $i] == "--vendor" } {
+		set vendor [split [lindex $argv $i+1] _]
+		if { ! [ IsValidType hex $vendor ] } {	SafeExit }
+	}
+}
+
 if {[lindex $argv 0] == "--symlink-name"} {
 	puts -nonewline [SymLinkName [lindex $argv 1]]
 	SafeExit
@@ -1200,6 +1245,21 @@ return 0
 
 }
 
+# Validates if given input is of right type of what is expected
+proc IsValidType {type value} {
+	if { $type == "hex" } {
+		return [ regexp {^(0)[xX][0-9a-fA-F]+$} $value ]
+	} elseif { $type == "cdev" } {
+		# FreBSD cdev format is: ugen[int>0].[1-128]
+	        # The regex permits bus 1-999 and devices 1-128
+		# - Limitation of 999 buses   is mostly arbitrary by author
+		# - Limitation of 128 devices is defined by the USB standard
+		# - Notice: Device 1 usually (always?) is the root hub.
+		return [ regexp {^(ugen)([1-9]|[1-9][0-9]|[1-9][0-9][0-9]).([1-9]|[1-9][0-9]|[1][0-2][0-8])$} $value ]
+	} else {
+		return 0
+	}
+}
 
 # The actual entry point
 Main $argv $argc
