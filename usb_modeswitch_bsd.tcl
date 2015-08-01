@@ -98,15 +98,6 @@ if {[lindex $argv 0] == "--symlink-name"} {
 	SafeExit
 }
 
-if {[lindex $argv 0] == "--switch-systemd"} {
-	set argList [split [lindex $argv 1] _]
-	Log "\nStarted via systemd"
-} else {
-	if {[lindex $argv 0] == "--switch-upstart"} {
-		Log "\nStarted via upstart"
-	}
-	set argList [split [lindex $argv 1] /]
-}
 if [string length [lindex $argList 1]] {
 	set device [lindex $argList 1]
 } else {
