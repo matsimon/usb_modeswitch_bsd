@@ -49,10 +49,12 @@ Log "[ParseGlobalConfig]"
 # a udev rule
 
 # FreeBSD: Evaluate parameters given by devd(8) rules
+# Use the same wording externally (cli switches) as devd, internally
+# try to stick with wording used by Linux' usb_modeswitch_handler
 # FIXME:
 # - Better input validation
 # - Check for missing and likely optional arguments
-# - Doesn't validate if argument is given more than once
+# - We don't validate if argument is given more than once
 
 for {set i 0} {$i < $argc} {incr i} {
 
@@ -67,13 +69,24 @@ for {set i 0} {$i < $argc} {incr i} {
 		}
 
 		# bus = after ugen till . ; device = after . till end
+		# NOTICE: device (and bus?) are mandatory on Linux
 		set bus    [ string range $cdev 4 $dot-1 ]
 		set device [ string range $cdev $dot+1 [ string length $cdev ]-1 ]
 	}
 
 	if {[lindex $argv $i] == "--class"} {
 		set class [split [lindex $argv $i+1] _]
-		if { ! [ IsValidType hex $class ] } { SafeExit }
+
+	        Log "Check class of interface ..."
+		if { ! [ IsValidType class $class ] } { exit }
+
+	        if {$config(class) == "0x08" || $config(class) == "0x03"} {
+		} else {
+			Log "No install mode found. Aborting"
+			exit
+		}
+
+		set config(class) $class
 	}
 
 	if {[lindex $argv $i] == "--help"} {
@@ -82,13 +95,15 @@ for {set i 0} {$i < $argc} {incr i} {
 	}
 
 	if {[lindex $argv $i] == "--product" } {
-		set product [split [lindex $argv $i+1] _]
-		if { ! [ IsValidType hex $product ] } { SafeExit }
+		set idProduct [split [lindex $argv $i+1] _]
+		if { ! [ IsValidType hex $idProduct ] } { SafeExit }
+		set config(vendor) $idProduct
 	}
 
 	if {[lindex $argv $i] == "--vendor" } {
-		set vendor [split [lindex $argv $i+1] _]
-		if { ! [ IsValidType hex $vendor ] } {	SafeExit }
+		set idVendor [split [lindex $argv $i+1] _]
+		if { ! [ IsValidType hex $idVendor ] } { SafeExit }
+		set config(vendor) $idVendor
 	}
 }
 
@@ -1233,6 +1248,9 @@ return 0
 proc IsValidType {type value} {
 	if { $type == "hex" } {
 		return [ regexp {^(0)[xX][0-9a-fA-F]+$} $value ]
+	} elseif { $type == "class" } {
+		# Valid USB device classes, source: http://www.usb.org/developers/defined_class
+		return [ regexp {^(0)[x]([0][0-9abdef]|[1][01]|[d][c]|[e][0f]|[f][ef])$} ]
 	} elseif { $type == "cdev" } {
 		# FreBSD cdev format is: ugen[int>0].[1-128]
 	        # The regex permits bus 1-999 and devices 1-128
