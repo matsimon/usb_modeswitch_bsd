@@ -587,7 +587,7 @@ proc {ParseGlobalConfig} {} {
 
 global flags
 set configFile ""
-set places [list /etc/usb_modeswitch.conf /etc/sysconfig/usb_modeswitch /etc/default/usb_modeswitch]
+set places [list /usr/local/etc/usb_modeswitch.conf]
 foreach cfg $places {
 	if [file exists $cfg] {
 		set configFile $cfg
