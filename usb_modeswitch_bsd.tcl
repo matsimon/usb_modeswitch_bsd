@@ -229,17 +229,11 @@ if {$usb(bNumConfigurations) == "1"} {
 	set configParam ""
 }
 
-# Check (and switch) for operating system if Huawei device present
-
-set flags(os) "linux"
-if {$usb(idVendor) == "12d1" && [regexp -nocase {android} [exec cat /proc/version]]} {
-	set flags(os) "android"
-}
-if {$flags(os) == "android"} {
-	set configList [ConfigGet conflist $usb(idVendor):#android]
-} else {
-	set configList [ConfigGet conflist $usb(idVendor):$usb(idProduct)]
-}
+# On Linux sometimes a differentiation with Android is needed.
+# As long as there is no known requirement on *BSD we stick to
+# default USB switching data.
+set flags(os) "*BSD"
+set configList [ConfigGet conflist $usb(idVendor):$usb(idProduct)]
 
 if {[llength $configList] == 0} {
 	Log "Aargh! Config file missing for $usb(idVendor):$usb(idProduct)! Exit"
