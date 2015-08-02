@@ -66,8 +66,7 @@ for {set i 0} {$i < $argc} {incr i} {
 		        if { [string index $cdev $dot] == "." } { break }
 		}
 
-		# bus = starting "ugen" till "."
-		# device = Starting "." till end
+		# bus = after ugen till . ; device = after . till end
 		set bus    [ string range $cdev 4 $dot-1 ]
 		set device [ string range $cdev $dot+1 [ string length $cdev ]-1 ]
 	}
