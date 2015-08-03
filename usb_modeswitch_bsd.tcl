@@ -96,15 +96,28 @@ for {set i 0} {$i < $argc} {incr i} {
 
 	if {[lindex $argv $i] == "--product" } {
 		set idProduct [split [lindex $argv $i+1] _]
-		if { ! [ IsValidType hex $idProduct ] } { SafeExit }
+		if { ! [ IsValidType hex $idProduct ] } {
+			Log "Invalid product ID given. Exit"
+			SafeExit
+		}
+
 		set config(vendor) $idProduct
+
 	}
 
 	if {[lindex $argv $i] == "--vendor" } {
 		set idVendor [split [lindex $argv $i+1] _]
-		if { ! [ IsValidType hex $idVendor ] } { SafeExit }
+		if { ! [ IsValidType hex $idVendor ] } {
+			Log "Invalid vendor ID given. Exit"
+			SafeExit
+		}
 		set config(vendor) $idVendor
 	}
+}
+
+if { ![info exists conf(idProduct)] || ![info exists conf(idVendor)] } {
+	Log "Mandatory product and / or vendor ID missing. Exit"
+	SafeExit
 }
 
 if {[lindex $argv 0] == "--symlink-name"} {
@@ -487,8 +500,8 @@ proc {ReadUSBAttrs} {dir args} {
 
 global usb
 
-set attrList {idVendor idProduct bConfigurationValue manufacturer product serial devnum busnum bNumConfigurations}
-set mandatoryList {idVendor idProduct bNumConfigurations}
+set attrList { bConfigurationValue manufacturer product serial devnum busnum bNumConfigurations}
+set mandatoryList { bNumConfigurations}
 set result 1
 if {$args != ""} {
 	lappend attrList "$args/bInterfaceClass"
