@@ -177,9 +177,6 @@ if {![ReadUSBAttrs $devdir]} {
 	Log "USB attributes not found in sysfs tree. Exit"
 	SafeExit
 }
-set config(vendor) $usb(idVendor)
-set config(product) $usb(idProduct)
-
 
 if $flags(logging) {
 	Log "\n----------------\nUSB values from sysfs:"
@@ -500,7 +497,7 @@ proc {ReadUSBAttrs} {dir args} {
 
 global usb
 
-set attrList { bConfigurationValue manufacturer product serial devnum busnum bNumConfigurations}
+set attrList { bConfigurationValue serial bNumConfigurations}
 set mandatoryList { bNumConfigurations}
 set result 1
 if {$args != ""} {
