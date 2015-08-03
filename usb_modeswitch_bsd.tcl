@@ -83,6 +83,8 @@ for {set i 0} {$i < $argc} {incr i} {
 			Log "Invalid device class given. Exit"
 			SafeExit
 		}
+		# TODO: If Class is 0x08 (mass storage) or 0x03 (HID)
+		# The linux script does nothing, should be revisited
 
 		set config(class) $class
 	}
@@ -134,7 +136,6 @@ if {![regexp -- {--switch-} [lindex $argv 0]]} {
 set setup(dbdir) /usr/local/share/usb_modeswitch
 set setup(dbdir_etc) /usr/local/etc/usb_modeswitch.d
 
-
 if {![file exists $setup(dbdir)] && ![file exists $setup(dbdir_etc)]} {
 	Log "\nError: no config database found in /usr/local/share or /usr/local/etc. Exit"
 	SafeExit
@@ -143,58 +144,6 @@ set bindir /usr/local/sbin
 
 set devList1 {}
 set devList2 {}
-
-
-# arg 0: the bus id for the device (udev: %b), often ommitted
-# arg 1: the "kernel name" for the device (udev: %k)
-#
-# Used to determine the top directory for the device in sysfs
-
-set ifChk 0
-if {[string length [lindex $argList 0]] == 0} {
-	if {[string length [lindex $argList 1]] == 0} {
-		Log "No device number values given from udev! Exit"
-		SafeExit
-	} else {
-		if {![regexp {(.*?):} [lindex $argList 1] d dev_top]} {
-			if [regexp {([0-9]+-[0-9]+\.?[0-9]*.*)} [lindex $argList 1] d dev_top] {
-				# new udev rules file, got to check class of first interface
-				set ifChk 1
-			} else {
-				Log "Could not determine device dir from udev values! Exit"
-				SafeExit
-			}
-		}
-	}
-} else {
-	set dev_top [lindex $argList 0]
-	regexp {(.*?):} $dev_top d dev_top
-}
-
-set devdir /sys/bus/usb/devices/$dev_top
-if {![file isdirectory $devdir]} {
-	Log "Top device directory not found ($devdir)! Exit"
-	SafeExit
-}
-Log "Use top device dir $devdir"
-
-set iface 0
-if $ifChk {
-	Log "Check class of first interface ..."
-	# set config(class) [IfClass 0]
-	if {$iface < 0} {
-		Log " No access to interface 0. Exit"
-		SafeExit
-	}
-	Log " Interface class is $config(class)."
-	if {$config(class) == "08" || $config(class) == "03"} {
-	} else {
-		Log "No install mode found. Aborting"
-		exit
-	}
-}
-set ifdir [file tail [IfDir $iface]]
-regexp {:([0-9]+\.[0-9]+)$} $ifdir d iface
 
 set flags(logwrite) 1
 
@@ -209,7 +158,6 @@ set match(sRe) scsi(rev)
 set match(uMa) usb(manufacturer)
 set match(uPr) usb(product)
 set match(uSe) usb(serial)
-
 
 # Now reading the USB attributes
 if {![ReadUSBAttrs $devdir]} {
