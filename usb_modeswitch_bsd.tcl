@@ -75,15 +75,13 @@ for {set i 0} {$i < $argc} {incr i} {
 	}
 
 	if {[lindex $argv $i] == "--class"} {
+        Log "Check class of device ..."
+
 		set class [split [lindex $argv $i+1] _]
 
-	        Log "Check class of interface ..."
-		if { ! [ IsValidType class $class ] } { exit }
-
-	        if {$config(class) == "0x08" || $config(class) == "0x03"} {
-		} else {
-			Log "No install mode found. Aborting"
-			exit
+		if { ! [ IsValidType class $class ] } {
+			Log "Invalid device class given. Exit"
+			SafeExit
 		}
 
 		set config(class) $class
@@ -183,7 +181,7 @@ Log "Use top device dir $devdir"
 set iface 0
 if $ifChk {
 	Log "Check class of first interface ..."
-	set config(class) [IfClass 0]
+	# set config(class) [IfClass 0]
 	if {$iface < 0} {
 		Log " No access to interface 0. Exit"
 		SafeExit
@@ -1110,22 +1108,6 @@ return $ifdir
 
 }
 # end of proc {IfDir}
-
-proc {IfClass} {iface} {
-
-set ifdir [IfDir $iface]
-
-if {![file exists $ifdir/bInterfaceClass]} {
-	return -1
-}
-set rc [open $ifdir/bInterfaceClass r]
-set c [read $rc]
-close $rc
-return [string trim $c]
-
-}
-# end of proc {IfClass}
-
 
 proc {SysLog} {msg} {
 
