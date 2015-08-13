@@ -105,6 +105,15 @@ for {set i 0} {$i < $argc} {incr i} {
 
 	}
 
+	if {[lindex $argv $i] == "--sernum" } {
+		set serial [split [lindex $argv $i+1] _]
+
+		# Guessing that a serial number can be quite
+		# any format, no check implemented (yet)
+		# The Linux script doesn't deem it mandatory.
+		set config(serial) $serial
+	}
+
 	if {[lindex $argv $i] == "--vendor" } {
 		set idVendor [split [lindex $argv $i+1] _]
 		if { ! [ IsValidType hex $idVendor ] } {
@@ -497,7 +506,7 @@ proc {ReadUSBAttrs} {dir args} {
 
 global usb
 
-set attrList { bConfigurationValue serial bNumConfigurations}
+set attrList { bConfigurationValue bNumConfigurations}
 set mandatoryList { bNumConfigurations}
 set result 1
 if {$args != ""} {
